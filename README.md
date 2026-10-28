@@ -1,108 +1,99 @@
 # Banking Management System
 
-Educational banking **simulation** (not a real bank; no regulatory compliance, no real money).
-Java 17 + Spring Boot 3 (JdbcTemplate) + MySQL 8 backend, React + TypeScript + Tailwind frontend.
+A full-stack Banking Management System developed using **Java, Spring Boot, MySQL, React, TypeScript, and Tailwind CSS**. This project simulates basic banking operations through a responsive web application with customer functionality and an administrator console.
+
+## Overview
+
+The Banking Management System is an educational project designed to demonstrate full-stack web development, database management, REST API integration, authentication, and secure handling of banking-related operations. It connects a React-based frontend with a Java Spring Boot backend and a MySQL database.
 
 ## Features
-- Customer registration, login, logout (server sessions, HTTP-only cookie, CSRF protection, BCrypt)
-- Savings / Current accounts with generated account numbers, balance starts at 0.00 INR
-- Deposit and withdraw: `BigDecimal` / `DECIMAL(19,2)`, `SELECT ... FOR UPDATE` row locking, one DB transaction per operation
-- Balance inquiry, transaction history (date + type filters, sorting, pagination)
-- Admin console: dashboard, account search, freeze / unfreeze / close, transaction monitoring, audit log
-- Customers can only see their own accounts and transactions (other customers' IDs return 404)
 
-## Layout
-```
-backend/    Spring Boot app (pom.xml, src/main, src/test, schema.sql)
-frontend/   React + Vite + TypeScript + Tailwind
-.env.example, API_DOCUMENTATION.md
-```
+- **User Authentication:** Customer registration, login, and logout.
+- **Customer Management:** Administrator access to customer information.
+- **Bank Account Management:** Savings and Current accounts with generated account numbers.
+- **Deposit and Withdrawal:** Record transactions and update account balances.
+- **Transaction History:** View transaction records with filtering and sorting.
+- **Admin Dashboard:** Overview of banking data and administrative activities.
+- **Account Controls:** Freeze, unfreeze, and close accounts.
+- **Audit Logs:** Track administrative actions.
+- **Role-Based Access:** Separate customer and administrator functionality.
+- **Responsive Interface:** Clean web interface built with React and Tailwind CSS.
 
-## Verification status (please read)
-The code was written in an environment **without** a Java compiler, Maven, MySQL or network access.
-**Nothing here has been compiled or executed, and no test has been run.** Expect to fix small compile
-errors on first build. Run the commands below, and the tests, on your machine to verify.
+## Technology Stack
 
-## Windows setup (PowerShell)
+| Component | Technology |
+|---|---|
+| Programming Language | Java |
+| Backend Framework | Spring Boot |
+| Database | MySQL 8 |
+| Database Connectivity | JDBC Template |
+| Frontend | React and TypeScript |
+| Styling | Tailwind CSS |
+| Build Tool | Maven |
+| API Architecture | REST APIs |
 
-### 1. Install prerequisites
-```powershell
-winget install EclipseAdoptium.Temurin.21.JDK
-winget install Apache.Maven
-winget install OpenJS.NodeJS.LTS
-winget install Oracle.MySQL          # or use the MySQL 8 installer from mysql.com
-```
-Close and reopen PowerShell, then check:
-```powershell
-java -version      # use JDK 21 for this project (avoid JDK 25 with the current test dependencies)
-mvn -version
-node -v; npm -v
-mysql --version    # if not found, add "C:\Program Files\MySQL\MySQL Server 8.0\bin" to PATH
-```
-Choose a root password during the MySQL installation and keep it private.
+## Project Structure
 
-### 2. Create the database and a dedicated user
-```powershell
-mysql -u root -p -e "CREATE DATABASE banking_db CHARACTER SET utf8mb4; CREATE USER 'bank_user'@'localhost' IDENTIFIED BY '<choose-a-password>'; GRANT ALL PRIVILEGES ON banking_db.* TO 'bank_user'@'localhost'; FLUSH PRIVILEGES;"
-```
-
-### 3. Create the tables
-From the project root:
-```powershell
-mysql -u bank_user -p banking_db -e "source backend/src/main/resources/schema.sql"
+```text
+banking-management-system/
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   └── test/
+│   └── pom.xml
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│   └── package-lock.json
+├── .gitignore
+└── README.md
 ```
 
-### 4. Configure environment variables (current PowerShell window)
-```powershell
-$env:DB_HOST="localhost"; $env:DB_PORT="3306"; $env:DB_NAME="banking_db"
-$env:DB_USERNAME="bank_user"; $env:DB_PASSWORD="<your-db-password>"
-$env:FRONTEND_ORIGIN="http://localhost:5173"
-# Optional: creates ONE administrator on first start if this email does not exist (password >= 12 chars)
-$env:ADMIN_EMAIL="admin@example.com"; $env:ADMIN_PASSWORD="<a-long-admin-password>"
-```
-See `.env.example` for the full list. Never commit real values.
+## Getting Started
 
-### 5. Start the backend (port 8080)
-```powershell
-cd backend
+### Prerequisites
+
+Install the following software:
+
+- Java Development Kit (JDK 17 or compatible version)
+- Maven
+- MySQL Server
+- Node.js and npm
+
+### Backend Setup
+
+1. Create a MySQL database named `banking_db`.
+2. Configure the database connection using environment variables.
+3. Execute the provided SQL schema to create the required tables.
+4. Open a terminal in the `backend` directory and run:
+
+```bash
 mvn spring-boot:run
 ```
 
-### 6. Start the frontend (port 5173) in a second PowerShell window
-```powershell
-cd frontend
+The backend runs on `http://localhost:8080` by default.
+
+### Frontend Setup
+
+Open another terminal in the `frontend` directory and run:
+
+```bash
 npm install
 npm run dev
 ```
-Open http://localhost:5173. In development Vite proxies `/api` to `http://localhost:8080`.
 
-### 7. Try it
-1. Register at `/register`, log in, open an account, deposit, withdraw, view history.
-2. Administrator: log in at `/admin/login` with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+Open the local URL displayed in your terminal, usually `http://localhost:5173`.
 
-### 8. Tests and builds
-```powershell
-cd backend;  mvn test                 # unit + web-layer tests
-cd frontend; npm run build            # type-check and production build
-```
-`FinancialIntegrationTest` (real MySQL, concurrent withdrawals, rollback) uses Testcontainers and needs
-Docker Desktop running; without Docker it is skipped automatically.
+Configure the required administrator and database environment variables according to your local setup.
 
-## Troubleshooting
-| Problem | Fix |
-|---|---|
-| `Access denied for user` | Check `DB_USERNAME` / `DB_PASSWORD` and that the user has rights on `banking_db`. |
-| `Communications link failure` | MySQL service not running: `Get-Service MySQL*`, then `Start-Service <name>`. Check `DB_HOST`/`DB_PORT`. |
-| `Unknown database` / `Table doesn't exist` | Redo steps 2-3. |
-| Port 8080 or 5173 in use | `netstat -ano | findstr :8080`, stop that process, or set `$env:SERVER_PORT` (backend) / `npm run dev -- --port 5174` (then update `FRONTEND_ORIGIN`). |
-| CORS errors | `FRONTEND_ORIGIN` must exactly equal the browser origin (scheme + host + port). |
-| 403 on POST/PATCH | Security token cookie missing: reload the page; ensure cookies are enabled. |
-| `npm install` fails | Check Node 18+, delete `node_modules`, retry; check proxy/network. |
-| `mvn` not recognized | Reopen PowerShell after installing, or add Maven's `bin` folder to PATH. |
+## Learning Objectives
 
-## Known limitations
-- Not compiled or tested yet (see above). No frontend automated tests.
-- No transfers between accounts (optional in the spec), no password reset, no login-attempt throttling.
-- Production use would need HTTPS (`COOKIE_SECURE=true`), a proper secrets store and a security review.
-- Dates are shown using the server database time zone; configure MySQL/JVM time zones consistently.
-- No development seed script is included; create data through the UI.
+This project provides practical experience in Java backend development, React frontend development, MySQL database integration, REST API design, authentication, and full-stack application architecture.
+
+## Disclaimer
+
+This project is an **educational banking simulation**, not a real banking application. It is not intended for actual financial transactions or storing real customer financial information.
+
+## Author
+
+Developed as a full-stack software development project using modern web technologies.
